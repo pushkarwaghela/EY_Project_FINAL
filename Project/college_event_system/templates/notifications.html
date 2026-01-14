@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h1 class="hero-title">Notifications</h1>
+                    <p class="text-muted">Stay updated with your activities</p>
+                </div>
+                {% if notifications %}
+                <button id="markAllReadBtn" class="btn btn-outline-primary">
+                    <i class="fas fa-check-double me-2"></i>Mark All Read
+                </button>
+                {% endif %}
+            </div>
+            
+            {% if notifications %}
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="notificationList">
+                        {% for notification in notifications %}
+                        <div class="list-group-item notification-item {% if not notification.is_read %}bg-light unread{% endif %}" 
+                             id="notification-{{ notification.notification_id }}"
+                             data-notification-id="{{ notification.notification_id }}">
+                            <div class="d-flex w-100 justify-content-between align-items-start">
+                                <div class="me-3">
+                                    <div class="notification-icon mb-2">
+                                        {% if notification.notification_type == 'event' %}
+                                        <i class="fas fa-calendar-check text-primary fa-lg"></i>
+                                        {% elif notification.notification_type == 'attendance' %}
+                                        <i class="fas fa-qrcode text-success fa-lg"></i>
+                                        {% elif notification.notification_type == 'system' %}
+                                        <i class="fas fa-cog text-warning fa-lg"></i>
+                                        {% else %}
+                                        <i class="fas fa-bell text-info fa-lg"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ notification.title }}</h6>
+                                    <p class="mb-1 text-muted">{{ notification.message }}</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ notification.created_at|timesince }} ago
+                                    </small>
+                                </div>
+                                <div class="ms-3">
+                                    {% if not notification.is_read %}
+                                    <span class="badge bg-primary mb-2 d-block">New</span>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-outline-secondary mark-read-btn" 
+                                            data-notification-id="{{ notification.notification_id }}">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- No notifications message (hidden by default) -->
+            <div id="noNotifications" class="text-center py-5" style="display: none;">
+                <i class="fas fa-bell fa-4x text-muted mb-4"></i>
+                <h3 class="text-muted">No notifications</h3>
+                <p class="text-muted">You're all caught up!</p>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bell fa-4x text-muted mb-4"></i>
+                <h3 class="text-muted">No notifications</h3>
+                <p class="text-muted">You're all caught up!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Inline JavaScript for this page -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Notifications page loaded');
+    
+    // Handle individual mark as read buttons
+    document.querySelectorAll('.mark-read-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const notificationId = this.dataset.notificationId;
+            const notificationElement = document.getElementById(`notification-${notificationId}`);
+            
+            if (notificationId && notificationElement) {
+                console.log('Marking notification as read:', notificationId);
+                markNotificationAsRead(notificationId, notificationElement);
+            }
+        });
+    });
+    
+    // Handle "Mark All Read" button
+    const markAllBtn = document.getElementById('markAllReadBtn');
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', function() {
+            console.log('Marking all notifications as read...');
+            
+            // Get all unread notification items
+            const unreadNotifications = document.querySelectorAll('.notification-item.unread');
+            const totalCount = unreadNotifications.length;
+            let processedCount = 0;
+            
+            if (totalCount === 0) {
+                showToast('All notifications are already read', 'info');
+                return;
+            }
+            
+            // Show loading state
+            const originalText = markAllBtn.innerHTML;
+            markAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            markAllBtn.disabled = true;
+            
+            // Mark each notification as read
+            unreadNotifications.forEach(item => {
+                const notificationId = item.dataset.notificationId;
+                if (notificationId) {
+                    // Use setTimeout to stagger requests
+                    setTimeout(() => {
+                        markNotificationAsRead(notificationId, item, true).then(() => {
+                            processedCount++;
+                            
+                            // When all are processed
+                            if (processedCount === totalCount) {
+                                // Restore button
+                                markAllBtn.innerHTML = originalText;
+                                markAllBtn.disabled = false;
+                                
+                                // Show success message
+                                showToast(`Marked ${totalCount} notification${totalCount > 1 ? 's' : ''} as read`, 'success');
+                                
+                                // Check if all notifications are gone
+                                checkEmptyNotifications();
+                            }
+                        });
+                    }, processedCount * 100); // Stagger requests by 100ms
+                } else {
+                    processedCount++;
+                }
+            });
+        });
+    }
+    
+    // Enhanced markNotificationAsRead function for this page
+    window.markNotificationAsRead = function(notificationId, element, isSilent = false) {
+        return new Promise((resolve) => {
+            console.log('Marking notification as read:', notificationId);
+            
+            const csrftoken = getCookie('csrftoken');
+            if (!csrftoken) {
+                if (!isSilent) showToast('Session error. Please refresh.', 'error');
+                resolve(false);
+                return;
+            }
+            
+            // Show loading state on button
+            const button = element.querySelector('.mark-read-btn');
+            if (button) {
+                const originalHtml = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                button.disabled = true;
+            }
+            
+            fetch(`/api/notifications/${notificationId}/mark-read/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    notification_id: notificationId,
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Mark read response:', data);
+                
+                // Restore button
+                if (button) {
+                    button.innerHTML = '<i class="fas fa-check"></i>';
+                    button.disabled = true;
+                    button.classList.remove('btn-outline-secondary');
+                    button.classList.add('btn-outline-success');
+                }
+                
+                if (data.success) {
+                    // Update UI
+                    element.classList.remove('unread', 'bg-light');
+                    
+                    // Remove "New" badge
+                    const newBadge = element.querySelector('.badge.bg-primary');
+                    if (newBadge) newBadge.remove();
+                    
+                    // Update global notification badge
+                    if (data.unread_count !== undefined) {
+                        updateNotificationBadge(data.unread_count);
+                    }
+                    
+                    // Show success toast (unless silent)
+                    if (!isSilent) {
+                        showToast('Notification marked as read', 'success');
+                    }
+                    
+                    resolve(true);
+                } else {
+                    if (!isSilent) {
+                        showToast(data.error || 'Failed to mark as read', 'error');
+                    }
+                    
+                    // Restore button on error
+                    if (button) {
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        button.disabled = false;
+                    }
+                    
+                    resolve(false);
+                }
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+                
+                if (!isSilent) {
+                    showToast('Network error. Please try again.', 'error');
+                }
+                
+                // Restore button on error
+                if (button) {
+                    button.innerHTML = '<i class="fas fa-check"></i>';
+                    button.disabled = false;
+                }
+                
+                resolve(false);
+            });
+        });
+    };
+    
+    // Helper function to check if notifications list is empty
+    function checkEmptyNotifications() {
+        const notificationList = document.getElementById('notificationList');
+        if (notificationList && notificationList.children.length === 0) {
+            notificationList.style.display = 'none';
+            document.getElementById('noNotifications').style.display = 'block';
+            document.getElementById('markAllReadBtn').style.display = 'none';
+        }
+    }
+    
+    // Add some CSS for animations
+    const style = document.createElement('style');
+    style.textContent = `
+        .notification-item {
+            transition: all 0.3s ease;
+        }
+        
+        .notification-item.fading {
+            opacity: 0;
+            transform: translateX(100%);
+            height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .mark-read-btn .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.05);
+        }
+        
+        .list-group-item.unread {
+            border-left: 3px solid #4361ee;
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+
+<!-- Include the main script -->
+<script src="{% static 'js/script.js' %}"></script>
+
+<style>
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #4361ee 0%, #7209b7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .notification-item:hover {
+        background-color: rgba(0,0,0,0.02);
+        transform: translateX(5px);
+    }
+    
+    .btn-outline-success {
+        color: #2ec4b6;
+        border-color: #2ec4b6;
+    }
+    
+    .btn-outline-success:hover {
+        background-color: #2ec4b6;
+        color: white;
+    }
+</style>
+{% endblock %}

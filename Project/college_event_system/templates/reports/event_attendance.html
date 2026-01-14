@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Event Attendance - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'events' %}">Events</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'event_detail' event.event_id %}">{{ event.title|truncatechars:30 }}</a></li>
+                    <li class="breadcrumb-item active">Attendance</li>
+                </ol>
+            </nav>
+            <h2 class="h3 mb-0">
+                <i class="fas fa-users text-primary me-2"></i>
+                Attendance for {{ event.title }}
+            </h2>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="exportAttendance()">
+                <i class="fas fa-download me-2"></i>Export
+            </button>
+            <a href="{% url 'generate_event_qr' event.event_id %}" class="btn btn-success">
+                <i class="fas fa-qrcode me-2"></i>QR Code
+            </a>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary bg-opacity-10 border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">Registered</h6>
+                            <h3 class="mb-0">{{ total_registered }}</h3>
+                        </div>
+                        <div class="avatar-sm rounded-circle bg-primary d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user-plus fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success bg-opacity-10 border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">Attended</h6>
+                            <h3 class="mb-0">{{ total_attended }}</h3>
+                        </div>
+                        <div class="avatar-sm rounded-circle bg-success d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user-check fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info bg-opacity-10 border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">Attendance Rate</h6>
+                            <h3 class="mb-0">{{ attendance_rate }}%</h3>
+                        </div>
+                        <div class="avatar-sm rounded-circle bg-info d-flex align-items-center justify-content-center">
+                            <i class="fas fa-chart-line fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning bg-opacity-10 border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted">On Time</h6>
+                            <h3 class="mb-0">{{ on_time_count }}</h3>
+                        </div>
+                        <div class="avatar-sm rounded-circle bg-warning d-flex align-items-center justify-content-center">
+                            <i class="fas fa-clock fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Attendance Methods -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Attendance by Method</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th class="text-end">Count</th>
+                                    <th class="text-end">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for method in attendance_by_method %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-{{ method.method|default:'question' }}-circle me-1"></i>
+                                            {{ method.get_method_display|default:method.method|title }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">{{ method.count }}</td>
+                                    <td class="text-end">
+                                        {{ method.count|floatformat:1 }}%
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-3">
+                                        No attendance records yet
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <button class="btn btn-outline-primary text-start" onclick="markAllPresent()">
+                            <i class="fas fa-user-check me-2"></i>
+                            Mark All Registered as Present
+                        </button>
+                        <button class="btn btn-outline-success text-start" onclick="sendReminders()">
+                            <i class="fas fa-bell me-2"></i>
+                            Send Attendance Reminders
+                        </button>
+                        <button class="btn btn-outline-warning text-start" onclick="generateReport()">
+                            <i class="fas fa-file-pdf me-2"></i>
+                            Generate Attendance Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Attendance Records -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Attendance Records</h5>
+            <div class="input-group" style="max-width: 300px;">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search students...">
+                <button class="btn btn-outline-secondary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="attendanceTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Student</th>
+                            <th>Time</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Device</th>
+                            <th class="pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_records %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm me-3">
+                                        {% if record.student.profile_picture %}
+                                        <img src="{{ record.student.profile_picture.url }}" 
+                                             class="rounded-circle" width="40" height="40">
+                                        {% else %}
+                                        <div class="avatar-placeholder rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                                             style="width: 40px; height: 40px;">
+                                            {{ record.student.first_name|first|upper }}{{ record.student.last_name|first|upper }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ record.student.get_full_name }}</h6>
+                                        <small class="text-muted">{{ record.student.student_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ record.marked_at|date:"M d, Y" }}</div>
+                                <small class="text-muted">{{ record.marked_at|time:"h:i A" }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info bg-opacity-10 text-info">
+                                    <i class="fas fa-{{ record.method_icon }} me-1"></i>
+                                    {{ record.get_method_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ record.status_color }} bg-opacity-10 text-{{ record.status_color }}">
+                                    <i class="fas fa-{{ record.status_icon }} me-1"></i>
+                                    {{ record.status|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ record.device_info|truncatechars:20|default:"-" }}</small>
+                            </td>
+                            <td class="pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="viewDetails('{{ record.attendance_id }}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="toggleVerification('{{ record.attendance_id }}', this)">
+                                        <i class="fas fa-{% if record.verified %}times{% else %}check{% endif %}"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                                <h5>No attendance records yet</h5>
+                                <p class="text-muted">Attendance records will appear here once students start marking attendance</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportAttendance() {
+    window.location.href = `/attendance/event/{{ event.event_id }}/export/`;
+}
+
+function markAllPresent() {
+    if (!confirm('Mark all registered students as present?')) return;
+    
+    fetch(`/attendance/event/{{ event.event_id }}/mark-all/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', data.message);
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast('error', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to mark attendance');
+    });
+}
+
+function sendReminders() {
+    if (!confirm('Send attendance reminders to registered students?')) return;
+    
+    fetch(`/attendance/event/{{ event.event_id }}/send-reminders/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', data.message);
+        } else {
+            showToast('error', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to send reminders');
+    });
+}
+
+function generateReport() {
+    fetch(`/attendance/event/{{ event.event_id }}/report/`)
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `attendance-report-{{ event.event_id }}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to generate report');
+    });
+}
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#attendanceTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Generate QR Codes - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h3 class="mb-0">
+                        <i class="fas fa-qrcode text-primary me-2"></i>
+                        Generate Event QR Codes
+                    </h3>
+                    <p class="text-muted mb-0">Generate QR codes for event attendance</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- QR Generation Form -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Event</label>
+                        <select id="eventSelect" class="form-select form-select-lg">
+                            <option value="">Choose an event...</option>
+                            {% for event in events %}
+                            <option value="{{ event.event_id }}">
+                                {{ event.title }} - {{ event.date }} ({{ event.get_status_display }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Only upcoming and ongoing events are listed
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button id="generateQRBtn" class="btn btn-primary btn-lg">
+                            <i class="fas fa-qrcode me-2"></i>Generate QR Code
+                        </button>
+                    </div>
+                    
+                    <!-- QR Display Area -->
+                    <div id="qrResult" class="text-center mt-4" style="display: none;">
+                        <div class="card border-success bg-success bg-opacity-5 mb-4">
+                            <div class="card-body p-4">
+                                <h4 class="text-success mb-3">
+                                    <i class="fas fa-check-circle me-2"></i>QR Code Generated
+                                </h4>
+                                <div id="qrImageContainer" class="mb-4"></div>
+                                <div id="eventInfo" class="mb-3"></div>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <button class="btn btn-success" id="downloadQRBtn">
+                                        <i class="fas fa-download me-2"></i>Download QR
+                                    </button>
+                                    <button class="btn btn-outline-success" id="printQRBtn">
+                                        <i class="fas fa-print me-2"></i>Print
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="newQRBtn">
+                                        <i class="fas fa-plus me-2"></i>New QR
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Instructions -->
+                    <div class="card border-light bg-light mt-4">
+                        <div class="card-body">
+                            <h5 class="mb-3">
+                                <i class="fas fa-info-circle text-primary me-2"></i>
+                                How to use QR Codes
+                            </h5>
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <div class="d-flex">
+                                        <div class="me-3">
+                                            <span class="badge bg-primary rounded-circle p-2">1</span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Generate QR</h6>
+                                            <p class="text-muted mb-0 small">Select an event and generate the QR code</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex">
+                                        <div class="me-3">
+                                            <span class="badge bg-primary rounded-circle p-2">2</span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Display QR</h6>
+                                            <p class="text-muted mb-0 small">Display the QR code at the event venue</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex">
+                                        <div class="me-3">
+                                            <span class="badge bg-primary rounded-circle p-2">3</span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Scan QR</h6>
+                                            <p class="text-muted mb-0 small">Students scan with their camera to mark attendance</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const eventSelect = document.getElementById('eventSelect');
+    const generateQRBtn = document.getElementById('generateQRBtn');
+    const qrResult = document.getElementById('qrResult');
+    const qrImageContainer = document.getElementById('qrImageContainer');
+    const eventInfo = document.getElementById('eventInfo');
+    
+    generateQRBtn.addEventListener('click', function() {
+        const eventId = eventSelect.value;
+        if (!eventId) {
+            showToast('error', 'Please select an event');
+            return;
+        }
+        
+        // Show loading
+        const originalText = generateQRBtn.innerHTML;
+        generateQRBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        generateQRBtn.disabled = true;
+        
+        // Generate QR via AJAX
+        fetch(`/admin/attendance/generate-qr/${eventId}/`)
+            .then(response => response.json())
+            .then(data => {
+                generateQRBtn.innerHTML = originalText;
+                generateQRBtn.disabled = false;
+                
+                if (data.success) {
+                    // Display QR code
+                    qrImageContainer.innerHTML = `
+                        <img src="${data.qr_code}" alt="QR Code" class="img-fluid rounded shadow" style="max-width: 250px;">
+                    `;
+                    
+                    eventInfo.innerHTML = `
+                        <h5>${data.event.title}</h5>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-clock me-1"></i>${data.event.time}<br>
+                            <small class="text-muted">Event Code: ${data.event.code}</small>
+                        </p>
+                    `;
+                    
+                    qrResult.style.display = 'block';
+                    
+                    // Set up download button
+                    document.getElementById('downloadQRBtn').onclick = function() {
+                        const link = document.createElement('a');
+                        link.href = data.qr_code;
+                        link.download = `qr-${data.event.code}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    };
+                    
+                    // Set up print button
+                    document.getElementById('printQRBtn').onclick = function() {
+                        const printWindow = window.open('', '_blank');
+                        printWindow.document.write(`
+                            <html>
+                                <head>
+                                    <title>QR Code - ${data.event.title}</title>
+                                    <style>
+                                        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                                        .qr-container { margin: 20px 0; }
+                                        .event-info { margin: 20px 0; }
+                                    </style>
+                                </head>
+                                <body>
+                                    <h2>${data.event.title}</h2>
+                                    <div class="event-info">
+                                        <p>Event Code: ${data.event.code}</p>
+                                        <p>Time: ${data.event.time}</p>
+                                    </div>
+                                    <div class="qr-container">
+                                        <img src="${data.qr_code}" style="max-width: 300px;">
+                                    </div>
+                                    <p><small>Generated on ${new Date().toLocaleDateString()}</small></p>
+                                </body>
+                            </html>
+                        `);
+                        printWindow.document.close();
+                        printWindow.print();
+                    };
+                    
+                    // Scroll to result
+                    qrResult.scrollIntoView({ behavior: 'smooth' });
+                    
+                    showToast('success', 'QR code generated successfully');
+                } else {
+                    showToast('error', data.message || 'Failed to generate QR code');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                generateQRBtn.innerHTML = originalText;
+                generateQRBtn.disabled = false;
+                showToast('error', 'Failed to generate QR code');
+            });
+    });
+    
+    // New QR button
+    document.getElementById('newQRBtn').onclick = function() {
+        qrResult.style.display = 'none';
+        eventSelect.value = '';
+        eventSelect.focus();
+    };
+});
+
+function showToast(type, message) {
+    const toastHtml = `
+        <div class="toast align-items-center text-bg-${type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    const toastEl = toastContainer.lastElementChild;
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+    
+    toastEl.addEventListener('hidden.bs.toast', function () {
+        toastEl.remove();
+    });
+}
+</script>
+{% endblock %}

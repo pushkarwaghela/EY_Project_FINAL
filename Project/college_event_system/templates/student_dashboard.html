@@ -1,0 +1,1567 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard - Smart College Event System{% endblock %}
+
+{% block extra_head %}
+<style>
+    .student-dashboard {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        min-height: calc(100vh - 200px);
+    }
+
+    /* Hero Welcome Section */
+    .hero-welcome {
+        background: linear-gradient(135deg, rgba(67, 97, 238, 0.1) 0%, rgba(114, 9, 183, 0.1) 100%);
+        border-radius: 25px;
+        padding: 3rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-welcome::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(67, 97, 238, 0.05) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: float 20s linear infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        100% { transform: translate(-50px, -50px) rotate(360deg); }
+    }
+
+    .welcome-text {
+        position: relative;
+        z-index: 2;
+    }
+
+    .user-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid white;
+        box-shadow: 0 10px 40px rgba(67, 97, 238, 0.2);
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+
+    .user-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Enhanced Stats Cards */
+    .enhanced-stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 100%;
+    }
+
+    .enhanced-stat-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    }
+
+    .enhanced-stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .stat-attendance::before {
+        background: linear-gradient(135deg, #2ec4b6 0%, #20a39e 100%);
+    }
+
+    .stat-events::before {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    }
+
+    .stat-rate::before {
+        background: linear-gradient(135deg, #ff9f1c 0%, #ff9100 100%);
+    }
+
+    .stat-notifications::before {
+        background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+    }
+
+    .stat-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        color: white;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-attendance .stat-icon-wrapper {
+        background: linear-gradient(135deg, #2ec4b6 0%, #20a39e 100%);
+    }
+
+    .stat-events .stat-icon-wrapper {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    }
+
+    .stat-rate .stat-icon-wrapper {
+        background: linear-gradient(135deg, #ff9f1c 0%, #ff9100 100%);
+    }
+
+    .stat-notifications .stat-icon-wrapper {
+        background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-progress {
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+
+    .stat-progress-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 1s ease;
+    }
+
+    /* Action Cards */
+    .action-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .action-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.1) 100%);
+        pointer-events: none;
+    }
+
+    .action-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+    }
+
+    .action-card:hover .action-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .action-card-1 .action-icon {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    }
+
+    .action-card-2 .action-icon {
+        background: linear-gradient(135deg, #2ec4b6 0%, #20a39e 100%);
+    }
+
+    .action-card-3 .action-icon {
+        background: linear-gradient(135deg, #ff9f1c 0%, #ff9100 100%);
+    }
+
+    .action-card-4 .action-icon {
+        background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+    }
+
+    .action-card-5 .action-icon {
+        background: linear-gradient(135deg, #7209b7 0%, #560bad 100%);
+    }
+
+    .action-card-6 .action-icon {
+        background: linear-gradient(135deg, #06d6a0 0%, #05c593 100%);
+    }
+
+    .action-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: #2c3e50;
+    }
+
+    .action-description {
+        color: #64748b;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    /* Event Cards */
+    .event-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .event-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .event-header {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .event-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .event-category {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+    }
+
+    .event-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 1rem 0;
+        line-height: 1.3;
+    }
+
+    .event-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .event-body {
+        padding: 1.5rem;
+    }
+
+    .event-description {
+        color: #64748b;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .event-footer {
+        padding: 1.5rem;
+        border-top: 1px solid #f1f5f9;
+        background: #f8fafc;
+    }
+
+    .participants-count {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .participants-count i {
+        color: #4361ee;
+    }
+
+    /* Activity Timeline */
+    .activity-timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .activity-timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, #4361ee, #7209b7);
+    }
+
+    .activity-item {
+        position: relative;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #4361ee;
+        animation: slideIn 0.5s ease forwards;
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    @keyframes slideIn {
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .activity-item:nth-child(1) { animation-delay: 0.1s; }
+    .activity-item:nth-child(2) { animation-delay: 0.2s; }
+    .activity-item:nth-child(3) { animation-delay: 0.3s; }
+
+    .activity-icon {
+        position: absolute;
+        left: -48px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        z-index: 1;
+    }
+
+    .attendance-activity .activity-icon {
+        background: linear-gradient(135deg, #2ec4b6 0%, #20a39e 100%);
+    }
+
+    .notification-activity .activity-icon {
+        background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+    }
+
+    .activity-content h6 {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: #2c3e50;
+    }
+
+    .activity-time {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Achievements Section */
+    .achievements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 1rem;
+    }
+
+    .achievement-badge {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .achievement-badge:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        border-color: #4361ee;
+    }
+
+    .achievement-badge.unlocked {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+
+    .achievement-badge.unlocked .achievement-icon {
+        color: #94a3b8;
+    }
+
+    .achievement-badge.locked {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        filter: grayscale(0.8);
+        opacity: 0.7;
+    }
+
+    .achievement-badge.locked::after {
+        content: '🔒';
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        font-size: 0.8rem;
+    }
+
+    .achievement-icon {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+        color: #4361ee;
+    }
+
+    .achievement-name {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-align: center;
+        color: #64748b;
+        padding: 0 5px;
+    }
+
+    /* Live Dashboard */
+    .live-dashboard {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .live-dashboard::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%2306d6a0" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,122.7C960,149,1056,203,1152,208C1248,213,1344,171,1392,149.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        opacity: 0.3;
+    }
+
+    .live-counter {
+        text-align: center;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .live-counter:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-5px);
+    }
+
+    .live-number {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #06d6a0 0%, #05c593 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .live-label {
+        font-size: 0.9rem;
+        color: #cbd5e1;
+        font-weight: 500;
+    }
+
+    /* Mini Calendar */
+    .mini-calendar {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+    }
+
+    .calendar-day-header {
+        text-align: center;
+        font-weight: 600;
+        color: #64748b;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .calendar-day:hover {
+        background: #f1f5f9;
+        transform: scale(1.1);
+    }
+
+    .calendar-day.today {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        color: white;
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .calendar-day.event-day::after {
+        content: '';
+        position: absolute;
+        bottom: 3px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        background: #f72585;
+        border-radius: 50%;
+    }
+
+    .calendar-day.other-month {
+        color: #cbd5e1;
+        opacity: 0.5;
+    }
+
+    /* Badge Colors */
+    .badge-sports {
+        background: linear-gradient(135deg, #06d6a0 0%, #05c593 100%);
+        color: white;
+    }
+
+    .badge-cultural {
+        background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+        color: white;
+    }
+
+    .badge-technical {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        color: white;
+    }
+
+    .badge-workshop {
+        background: linear-gradient(135deg, #ff9f1c 0%, #ff9100 100%);
+        color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-welcome {
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .enhanced-stat-card {
+            margin-bottom: 1rem;
+        }
+
+        .action-card {
+            margin-bottom: 1rem;
+        }
+
+        .achievements-grid {
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .achievement-badge {
+            width: 70px;
+            height: 70px;
+        }
+
+        .live-number {
+            font-size: 2.5rem;
+        }
+    }
+
+    /* Animations */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes floatUp {
+        0% {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .float-up {
+        animation: floatUp 0.8s ease forwards;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="student-dashboard">
+    <!-- Hero Welcome Section -->
+    <div class="hero-welcome mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center">
+                <div class="user-avatar">
+                    {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}">
+                    {% else %}
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6 welcome-text">
+                <h1 class="display-6 fw-bold mb-2">
+                    Welcome back, <span class="text-gradient">{{ user.get_full_name|default:user.username }}</span>! 👋
+                </h1>
+                <p class="lead mb-0">
+                    Here's what's happening with your events and attendance today.
+                </p>
+                <div class="mt-2">
+                    <span class="badge bg-light text-dark me-2">
+                        <i class="fas fa-id-card me-1"></i> {{ user.student_id|default:"ID: Not assigned" }}
+                    </span>
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-graduation-cap me-1"></i> {{ user.department|default:"Department not set" }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex flex-column flex-md-row gap-3 justify-content-md-end">
+                    <a href="{% url 'events' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle me-2"></i>Register for Events
+                    </a>
+                    <a href="{% url 'profile' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Statistics Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="enhanced-stat-card stat-attendance float-up" style="animation-delay: 0.1s;">
+                <div class="stat-icon-wrapper">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-value" id="statAttended">
+                    {{ stats.attended_events|default:"0" }}
+                </div>
+                <div class="stat-label">Events Attended</div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar" style="width: 
+                        {% if stats.registered_events and stats.registered_events > 0 %}
+                        {{ stats.attended_events|default:0|add:0 }}%
+                        {% else %}
+                        0%
+                        {% endif %};
+                        background: linear-gradient(135deg, #2ec4b6 0%, #20a39e 100%);">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        {% if recent_attendance and recent_attendance.0 %}
+                        Last: {{ recent_attendance.0.event.title|truncatechars:25 }}
+                        {% else %}
+                        No attendance yet
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="enhanced-stat-card stat-events float-up" style="animation-delay: 0.2s;">
+                <div class="stat-icon-wrapper">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-value" id="statUpcoming">
+                    {{ stats.upcoming_events|default:"0" }}
+                </div>
+                <div class="stat-label">Upcoming Events</div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar" style="width: 
+                        {% if stats.registered_events and stats.registered_events > 0 %}
+                        {{ stats.upcoming_events|default:0|add:0 }}%
+                        {% else %}
+                        0%
+                        {% endif %};
+                        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    {% if stats.upcoming_events and stats.upcoming_events > 0 %}
+                    <a href="{% url 'events' %}" class="text-decoration-none small">
+                        View all <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                    {% else %}
+                    <small class="text-muted">No upcoming events</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="enhanced-stat-card stat-rate float-up" style="animation-delay: 0.3s;">
+                <div class="stat-icon-wrapper">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-value" id="statRate">
+                    {{ stats.attendance_rate|default:"0" }}%
+                </div>
+                <div class="stat-label">Attendance Rate</div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar" id="rateProgress" style="width: {{ stats.attendance_rate|default:"0" }}%;
+                        background: linear-gradient(135deg, #ff9f1c 0%, #ff9100 100%);">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted" id="rateMessage">
+                        {% if stats.attendance_rate and stats.attendance_rate >= 80 %}
+                        <i class="fas fa-trophy text-warning me-1"></i> Excellent!
+                        {% elif stats.attendance_rate and stats.attendance_rate >= 60 %}
+                        <i class="fas fa-thumbs-up text-success me-1"></i> Good job
+                        {% else %}
+                        <i class="fas fa-bullhorn text-info me-1"></i> Keep going!
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="enhanced-stat-card stat-notifications float-up" style="animation-delay: 0.4s;">
+                <div class="stat-icon-wrapper">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="stat-value" id="statNotifications">
+                    {{ notifications.count|default:"0" }}
+                </div>
+                <div class="stat-label">Notifications</div>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar" style="width: 
+                        {% if notifications.unread and notifications.count and notifications.count > 0 %}
+                        {{ notifications.unread|default:0|add:0 }}%
+                        {% else %}
+                        0%
+                        {% endif %};
+                        background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    {% if notifications.unread and notifications.unread > 0 %}
+                    <a href="{% url 'notifications' %}" class="text-decoration-none small">
+                        {{ notifications.unread }} unread <i class="fas fa-envelope ms-1"></i>
+                    </a>
+                    {% else %}
+                    <small class="text-muted">All caught up</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Grid -->
+    <h3 class="fw-bold mb-4">Quick Actions</h3>
+    <div class="row g-4 mb-5">
+        <div class="col-xl-4 col-md-6">
+            <a href="{% url 'events' %}" class="text-decoration-none">
+                <div class="action-card action-card-1 float-up" style="animation-delay: 0.1s;">
+                    <div class="action-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <h4 class="action-title">Browse & Register</h4>
+                    <p class="action-description">
+                        Explore all upcoming college events and register with one click. Don't miss out on exciting opportunities!
+                    </p>
+                    <div class="mt-4">
+                        {% if upcoming_categories %}
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for category, count in upcoming_categories.items %}
+                            {% if count > 0 %}
+                            <span class="badge badge-{{ category }}">{{ count }} {{ category|title }}</span>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-4 col-md-6">
+            <a href="{% url 'attendance' %}" class="text-decoration-none">
+                <div class="action-card action-card-2 float-up" style="animation-delay: 0.2s;">
+                    <div class="action-icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h4 class="action-title">Mark Attendance</h4>
+                    <p class="action-description">
+                        Scan QR codes to mark your attendance instantly. Quick, easy, and contactless.
+                    </p>
+                    <div class="mt-4">
+                        {% if ongoing_events and ongoing_events.count > 0 %}
+                        <div class="alert alert-success alert-sm mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>{{ ongoing_events.count }} event{{ ongoing_events.count|pluralize }}</strong> happening now
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info alert-sm mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Check back later for ongoing events
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-4 col-md-6">
+            <a href="{% url 'profile' %}" class="text-decoration-none">
+                <div class="action-card action-card-3 float-up" style="animation-delay: 0.3s;">
+                    <div class="action-icon">
+                        <i class="fas fa-user-cog"></i>
+                    </div>
+                    <h4 class="action-title">Profile Settings</h4>
+                    <p class="action-description">
+                        Update your information, change password, and customize your dashboard preferences.
+                    </p>
+                    <div class="mt-4">
+                        <div class="progress" style="height: 8px;">
+                            {% with completion=100 %}
+                            <div class="progress-bar bg-warning" style="width: {{ completion }}%"></div>
+                            {% endwith %}
+                        </div>
+                        <small class="text-muted">Profile complete</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-4 col-md-6">
+            <a href="{% url 'notifications' %}" class="text-decoration-none">
+                <div class="action-card action-card-4 float-up" style="animation-delay: 0.4s;">
+                    <div class="action-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h4 class="action-title">Notifications</h4>
+                    <p class="action-description">
+                        Stay updated with event reminders, attendance confirmations, and important announcements.
+                    </p>
+                    <div class="mt-4">
+                        {% if notifications.unread and notifications.unread > 0 %}
+                        <span class="badge bg-danger rounded-pill">
+                            {{ notifications.unread }} new notification{{ notifications.unread|pluralize }}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-secondary rounded-pill">
+                            <i class="fas fa-check me-1"></i> All caught up
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-4 col-md-6">
+            <a href="#" class="text-decoration-none" onclick="showQRScanner()">
+                <div class="action-card action-card-5 float-up" style="animation-delay: 0.5s;">
+                    <div class="action-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h4 class="action-title">Quick Scanner</h4>
+                    <p class="action-description">
+                        Open camera instantly to scan event QR codes. No need to navigate through menus.
+                    </p>
+                    <div class="mt-4">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-camera me-2"></i> Launch Scanner
+                        </button>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-xl-4 col-md-6">
+            <a href="#attendance-history" class="text-decoration-none" onclick="showAttendanceHistory()">
+                <div class="action-card action-card-6 float-up" style="animation-delay: 0.6s;">
+                    <div class="action-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h4 class="action-title">History & Reports</h4>
+                    <p class="action-description">
+                        View your complete attendance history, download certificates, and track your progress.
+                    </p>
+                    <div class="mt-4">
+                        <span class="badge bg-light text-dark">
+                            Last 30 days: {{ stats.month_attendance|default:"0" }} attendance{{ stats.month_attendance|default:0|pluralize }}
+                        </span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Upcoming Events Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold mb-0">Your Upcoming Events</h3>
+                <a href="{% url 'events' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-eye me-2"></i>View All Events
+                </a>
+            </div>
+
+            {% if upcoming_events %}
+            <div class="row g-4">
+                {% for event in upcoming_events|slice:":3" %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="event-card float-up" style="animation-delay: {{ forloop.counter|add:"0.1" }}s;">
+                        <div class="event-header">
+                            <span class="event-category">{{ event.get_category_display }}</span>
+                            <h5 class="event-title">{{ event.title }}</h5>
+                            <div class="event-meta">
+                                <span><i class="fas fa-calendar me-1"></i> {{ event.date|date:"M d, Y" }}</span>
+                                <span><i class="fas fa-clock me-1"></i> {{ event.start_time|time:"g:i A" }}</span>
+                            </div>
+                        </div>
+                        <div class="event-body">
+                            <p class="event-description">
+                                {{ event.description|truncatechars:120 }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-map-marker-alt text-muted me-1"></i>
+                                    <small>{{ event.venue|truncatechars:30 }}</small>
+                                </div>
+                                <div class="participants-count">
+                                    <i class="fas fa-users"></i>
+                                    <span>{{ event.current_participants }}/{{ event.max_participants }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="event-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge 
+                                    {% if event.status == 'ongoing' %}bg-success
+                                    {% elif event.status == 'upcoming' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ event.get_status_display }}
+                                </span>
+                                <div class="btn-group">
+                                    <a href="{% url 'event_detail' event.event_id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-info-circle me-1"></i> Details
+                                    </a>
+                                    {% if event.is_registered %}
+                                    <button class="btn btn-sm btn-success" disabled>
+                                        <i class="fas fa-check me-1"></i> Registered
+                                    </button>
+                                    {% elif event.can_register %}
+                                    <a href="{% url 'register_event' event.event_id %}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-user-plus me-1"></i> Register
+                                    </a>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-secondary" disabled>
+                                        <i class="fas fa-ban me-1"></i> Full
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times fa-4x text-muted mb-4"></i>
+                    <h4>No Upcoming Events</h4>
+                    <p class="text-muted mb-4">You haven't registered for any upcoming events yet.</p>
+                    <a href="{% url 'events' %}" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Browse Available Events
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Activity & Live Dashboard -->
+    <div class="row g-4 mb-5">
+        <!-- Recent Activity -->
+        <div class="col-lg-8">
+            <div class="mini-calendar mb-4">
+                <div class="calendar-header">
+                    <h5 class="mb-0">Event Calendar</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="prevMonth()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="mx-3 fw-bold" id="currentMonth"></span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="nextMonth()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <div class="activity-section">
+                <h5 class="fw-bold mb-4">Recent Activity</h5>
+                <div class="activity-timeline">
+                    {% for record in recent_attendance|slice:":3" %}
+                    <div class="activity-item attendance-activity">
+                        <div class="activity-icon">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h6 class="mb-1">Attendance Marked</h6>
+                            <p class="text-muted mb-2">{{ record.event.title }}</p>
+                            <div class="activity-time">
+                                <i class="fas fa-clock"></i>
+                                {{ record.marked_at|timesince }} ago •
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i> {{ record.get_method_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h6 class="mb-1">Welcome to Smart College!</h6>
+                            <p class="text-muted mb-2">Start by registering for events and marking attendance.</p>
+                            <div class="activity-time">
+                                <i class="fas fa-clock"></i> Just now
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for notification in notifications.recent|slice:":2" %}
+                    <div class="activity-item notification-activity">
+                        <div class="activity-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h6 class="mb-1">{{ notification.title }}</h6>
+                            <p class="text-muted mb-2">{{ notification.message|truncatechars:100 }}</p>
+                            <div class="activity-time">
+                                <i class="fas fa-clock"></i>
+                                {{ notification.created_at|timesince }} ago
+                                {% if not notification.is_read %}
+                                <span class="badge bg-danger ms-2">New</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Dashboard & Achievements -->
+        <div class="col-lg-4">
+            <div class="live-dashboard mb-4">
+                <h5 class="fw-bold mb-4">Live Dashboard</h5>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="live-counter">
+                            <div class="live-number" id="liveParticipants">0</div>
+                            <div class="live-label">Active Participants</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="live-counter">
+                            <div class="live-number" id="ongoingEvents">0</div>
+                            <div class="live-label">Ongoing Events</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="live-counter">
+                            <div class="live-number" id="totalAttendance">0</div>
+                            <div class="live-label">Attendance Today</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="live-counter">
+                            <div class="live-number" id="availableEvents">0</div>
+                            <div class="live-label">Available Events</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 text-center">
+                    <div class="spinner-border spinner-border-sm text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <small class="text-muted ms-2">Live data updating...</small>
+                </div>
+            </div>
+
+            <div class="achievements-section">
+                <h5 class="fw-bold mb-4">Your Achievements</h5>
+                <div class="achievements-grid">
+                    <div class="achievement-badge unlocked" data-bs-toggle="tooltip" title="Perfect Attendance - Attend 10 events">
+                        <div class="achievement-icon">🎯</div>
+                        <div class="achievement-name">Perfect</div>
+                    </div>
+                    <div class="achievement-badge unlocked" data-bs-toggle="tooltip" title="Early Bird - Register early">
+                        <div class="achievement-icon">🐦</div>
+                        <div class="achievement-name">Early Bird</div>
+                    </div>
+                    <div class="achievement-badge locked" data-bs-toggle="tooltip" title="Event Enthusiast - Attend 25 events">
+                        <div class="achievement-icon">⭐</div>
+                        <div class="achievement-name">Enthusiast</div>
+                    </div>
+                    <div class="achievement-badge locked" data-bs-toggle="tooltip" title="QR Master - Scan 50 QR codes">
+                        <div class="achievement-icon">📱</div>
+                        <div class="achievement-name">QR Master</div>
+                    </div>
+                    <div class="achievement-badge unlocked" data-bs-toggle="tooltip" title="First Timer - First event">
+                        <div class="achievement-icon">🥇</div>
+                        <div class="achievement-name">First</div>
+                    </div>
+                    <div class="achievement-badge locked" data-bs-toggle="tooltip" title="Consistent - 30 day streak">
+                        <div class="achievement-icon">🔥</div>
+                        <div class="achievement-name">Consistent</div>
+                    </div>
+                    <div class="achievement-badge locked" data-bs-toggle="tooltip" title="Social Butterfly - 10 different events">
+                        <div class="achievement-icon">🦋</div>
+                        <div class="achievement-name">Social</div>
+                    </div>
+                    <div class="achievement-badge locked" data-bs-toggle="tooltip" title="Scholar - All categories">
+                        <div class="achievement-icon">🎓</div>
+                        <div class="achievement-name">Scholar</div>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        {{ achievements.unlocked|default:"4" }}/{{ achievements.total|default:"8" }} achievements unlocked
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommended Events -->
+    {% if recommended_events %}
+    <div class="recommended-events mb-5">
+        <h5 class="fw-bold mb-4">Recommended For You</h5>
+        <div class="row g-4">
+            {% for event in recommended_events|slice:":2" %}
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
+                                <i class="fas fa-star text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">{{ event.title }}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ event.date|date:"M d" }} • {{ event.category|title }}
+                                </small>
+                            </div>
+                        </div>
+                        <p class="small text-muted">{{ event.description|truncatechars:80 }}</p>
+                        <a href="{% url 'event_detail' event.event_id %}" class="btn btn-sm btn-outline-primary">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="attendanceHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Your Attendance History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="attendanceHistoryContent" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="qrScannerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">QR Code Scanner</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="scannerContainer" style="min-height: 400px; position: relative;">
+                    <div class="text-center py-5">
+                        <i class="fas fa-qrcode fa-4x text-muted mb-3"></i>
+                        <p class="text-muted">Initializing scanner...</p>
+                    </div>
+                </div>
+                <div id="qrResult" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🎓 Student Dashboard Initialized');
+
+        // Initialize counters with animation
+        setTimeout(() => {
+            animateCounter('statAttended', {{ stats.attended_events|default:0 }});
+            animateCounter('statUpcoming', {{ stats.upcoming_events|default:0 }});
+            animateCounter('statNotifications', {{ notifications.count|default:0 }});
+            animateCounter('liveParticipants', 245);
+            animateCounter('ongoingEvents', {{ ongoing_events.count|default:0 }});
+            animateCounter('totalAttendance', 156);
+            animateCounter('availableEvents', 12);
+        }, 1000);
+
+        // Initialize calendar
+        initCalendar();
+
+        // Initialize tooltips
+        const tooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltips.map(tooltipEl => new bootstrap.Tooltip(tooltipEl));
+
+        // Add hover effects to action cards
+        const actionCards = document.querySelectorAll('.action-card');
+        actionCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const icon = card.querySelector('.action-icon');
+                icon.style.transform = 'scale(1.1) rotate(5deg)';
+            });
+            card.addEventListener('mouseleave', () => {
+                const icon = card.querySelector('.action-icon');
+                icon.style.transform = 'scale(1) rotate(0deg)';
+            });
+        });
+
+        // Live data updates
+        updateLiveData();
+        setInterval(updateLiveData, 30000); // Update every 30 seconds
+
+        // Initialize animations
+        initAnimations();
+    });
+
+    function animateCounter(elementId, target) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        let current = 0;
+        const increment = target / 100;
+        const duration = 1500;
+        const stepTime = duration / 100;
+
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(current);
+        }, stepTime);
+    }
+
+    function initCalendar() {
+        const today = new Date();
+        let currentMonth = today.getMonth();
+        let currentYear = today.getFullYear();
+
+        function renderCalendar(month, year) {
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+
+            // Update month header
+            document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
+
+            // Get first day of month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay();
+
+            let calendarHTML = '';
+
+            // Day headers
+            const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            dayNames.forEach(day => {
+                calendarHTML += `<div class="calendar-day-header">${day}</div>`;
+            });
+
+            // Empty cells for days before the first day
+            for (let i = 0; i < startingDay; i++) {
+                calendarHTML += '<div class="calendar-day other-month"></div>';
+            }
+
+            // Actual days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const isToday = date.toDateString() === new Date().toDateString();
+                const hasEvent = Math.random() > 0.8; // Simulate events
+                const classes = ['calendar-day'];
+                if (isToday) classes.push('today');
+                if (hasEvent) classes.push('event-day');
+
+                calendarHTML += `<div class="${classes.join(' ')}">${day}</div>`;
+            }
+
+            document.getElementById('calendarGrid').innerHTML = calendarHTML;
+        }
+
+        window.prevMonth = function() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar(currentMonth, currentYear);
+        };
+
+        window.nextMonth = function() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar(currentMonth, currentYear);
+        };
+
+        // Initial render
+        renderCalendar(currentMonth, currentYear);
+    }
+
+    function updateLiveData() {
+        // Simulate live data updates
+        const participants = document.getElementById('liveParticipants');
+        const events = document.getElementById('ongoingEvents');
+        const attendance = document.getElementById('totalAttendance');
+        const available = document.getElementById('availableEvents');
+
+        if (participants) {
+            const current = parseInt(participants.textContent);
+            const change = Math.floor(Math.random() * 10) - 5;
+            const newValue = Math.max(0, current + change);
+            animateCounter('liveParticipants', newValue);
+        }
+
+        if (events) {
+            const current = parseInt(events.textContent);
+            const newValue = Math.max(0, Math.floor(Math.random() * 5));
+            events.textContent = newValue;
+        }
+
+        if (attendance) {
+            const current = parseInt(attendance.textContent);
+            const change = Math.floor(Math.random() * 20);
+            const newValue = current + change;
+            animateCounter('totalAttendance', newValue);
+        }
+    }
+
+    function initAnimations() {
+        // Add floating animation to elements
+        const floatElements = document.querySelectorAll('.float-up');
+        floatElements.forEach((el, index) => {
+            el.style.animationDelay = `${index * 0.1}s`;
+        });
+
+        // Add scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.event-card, .action-card').forEach(el => observer.observe(el));
+    }
+
+    function showAttendanceHistory() {
+        const modal = new bootstrap.Modal(document.getElementById('attendanceHistoryModal'));
+        modal.show();
+
+        // Load attendance history via AJAX
+        fetch('/attendance/history/')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('attendanceHistoryContent').innerHTML = html;
+            })
+            .catch(error => {
+                document.getElementById('attendanceHistoryContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Failed to load attendance history
+                    </div>
+                `;
+            });
+    }
+
+    function showQRScanner() {
+        const modal = new bootstrap.Modal(document.getElementById('qrScannerModal'));
+        modal.show();
+
+        // Initialize QR scanner
+        setTimeout(() => {
+            if (typeof startQRScanner === 'function') {
+                startQRScanner('scannerContainer', 'qrResult');
+            } else {
+                document.getElementById('scannerContainer').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        QR Scanner not available
+                    </div>
+                `;
+            }
+        }, 500);
+    }
+
+    // Update time every minute
+    function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        // You can add a clock element to display this
+    }
+
+    updateClock();
+    setInterval(updateClock, 60000);
+</script>
+{% endblock %}
