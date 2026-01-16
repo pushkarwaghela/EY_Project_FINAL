@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'core.middleware.SecurityHeadersMiddleware',
     'core.middleware.RoleAccessMiddleware',
     'core.middleware.UserActivityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 
 ]
 
