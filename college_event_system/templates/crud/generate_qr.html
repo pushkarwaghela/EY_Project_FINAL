@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Generate QR Codes - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h3 class="mb-0">
+                        <i class="fas fa-qrcode text-primary me-2"></i>
+                        Generate Event QR Codes
+                    </h3>
+                    <p class="text-muted mb-0">Generate QR codes for event attendance</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- QR Generation Form -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Event</label>
+                        <select id="eventSelect" class="form-select form-select-lg">
+                            <option value="">Choose an event...</option>
+                            {% for event in events %}
+                            <option value="{{ event.id }}">
+                                {{ event.title }} - {{ event.date }} 
+                                {% if event.start_time %}
+                                ({{ event.start_time|time:"H:i" }})
+                                {% endif %}
+                                ({{ event.get_status_display }})
+                            </option>
+                            {% empty %}
+                            <option value="">No events available</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Only upcoming and ongoing events are listed
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button id="generateQRBtn" class="btn btn-primary btn-lg">
+                            <i class="fas fa-qrcode me-2"></i>Generate QR Code
+                        </button>
+                    </div>
+                    
+                    <!-- QR Display Area -->
+                    <div id="qrResult" class="text-center mt-4" style="display: none;">
+                        <div class="card border-success bg-success bg-opacity-5 mb-4">
+                            <div class="card-body p-4">
+                                <h4 class="text-success mb-3">
+                                    <i class="fas fa-check-circle me-2"></i>QR Code Generated
+                                </h4>
+                                <div id="qrImageContainer" class="mb-4"></div>
+                                <div id="eventInfo" class="mb-3"></div>
+                                <div class="d-flex flex-wrap justify-content-center gap-3">
+                                    <button class="btn btn-success" id="downloadQRBtn">
+                                        <i class="fas fa-download me-2"></i>Download QR
+                                    </button>
+                                    <button class="btn btn-outline-success" id="printQRBtn">
+                                        <i class="fas fa-print me-2"></i>Print
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="newQRBtn">
+                                        <i class="fas fa-plus me-2"></i>New QR
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading Spinner -->
+                    <div id="loadingSpinner" class="text-center mt-4" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Generating QR Code...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSRF Token -->
+<input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const eventSelect = document.getElementById('eventSelect');
+    const generateQRBtn = document.getElementById('generateQRBtn');
+    const qrResult = document.getElementById('qrResult');
+    const qrImageContainer = document.getElementById('qrImageContainer');
+    const eventInfo = document.getElementById('eventInfo');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    
+    // Get CSRF token
+    const csrfToken = document.getElementById('csrf_token').value;
+    
+    generateQRBtn.addEventListener('click', function() {
+        const eventId = eventSelect.value;
+        if (!eventId) {
+            alert('Please select an event');
+            return;
+        }
+        
+        // Show loading, hide results
+        loadingSpinner.style.display = 'block';
+        qrResult.style.display = 'none';
+        
+        // Disable button and show loading
+        const originalText = generateQRBtn.innerHTML;
+        generateQRBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        generateQRBtn.disabled = true;
+        
+        // AJAX request to generate QR code
+        fetch(`/generate-qr/${eventId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                event_id: eventId
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            loadingSpinner.style.display = 'none';
+            generateQRBtn.innerHTML = originalText;
+            generateQRBtn.disabled = false;
+            
+            if (data.success) {
+                // Display QR code
+                qrImageContainer.innerHTML = `
+                    <img src="${data.qr_code}" alt="QR Code" class="img-fluid rounded shadow" style="max-width: 300px;">
+                `;
+                
+                // Build event info display - UPDATED for new field names
+                let eventHtml = `
+                    <h5 class="mb-2">${data.event.title}</h5>
+                    <p class="text-muted mb-1">
+                        <i class="fas fa-calendar me-1"></i>${data.event.date}
+                `;
+                
+                if (data.event.start_time) {
+                    eventHtml += `<br><i class="fas fa-clock me-1"></i>${data.event.start_time}`;
+                    if (data.event.end_time) {
+                        eventHtml += ` - ${data.event.end_time}`;
+                    }
+                }
+                
+                eventHtml += `
+                    </p>
+                    <p class="mb-0">
+                        <small class="text-muted">Event Code: ${data.event.code}</small>
+                    </p>
+                `;
+                
+                eventInfo.innerHTML = eventHtml;
+                qrResult.style.display = 'block';
+                
+                // Set up download button
+                document.getElementById('downloadQRBtn').onclick = function() {
+                    const link = document.createElement('a');
+                    link.href = data.qr_code;
+                    link.download = `qr-${data.event.code}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+                
+                // Set up print button
+                document.getElementById('printQRBtn').onclick = function() {
+                    let timeInfo = '';
+                    if (data.event.start_time) {
+                        timeInfo = `<p><strong>Time:</strong> ${data.event.start_time}`;
+                        if (data.event.end_time) {
+                            timeInfo += ` - ${data.event.end_time}`;
+                        }
+                        timeInfo += `</p>`;
+                    }
+                    
+                    const printContent = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Event QR Code - ${data.event.title}</title>
+                            <style>
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    text-align: center;
+                                    padding: 40px 20px;
+                                    margin: 0;
+                                }
+                                .print-container {
+                                    max-width: 600px;
+                                    margin: 0 auto;
+                                }
+                                h1 {
+                                    color: #333;
+                                    margin-bottom: 10px;
+                                    font-size: 24px;
+                                }
+                                .event-details {
+                                    margin: 20px 0 30px;
+                                    padding: 15px;
+                                    background: #f8f9fa;
+                                    border-radius: 8px;
+                                }
+                                .qr-code {
+                                    margin: 20px auto;
+                                    padding: 15px;
+                                    background: white;
+                                    border: 2px solid #ddd;
+                                    border-radius: 8px;
+                                    display: inline-block;
+                                }
+                                .footer {
+                                    margin-top: 30px;
+                                    color: #666;
+                                    font-size: 12px;
+                                }
+                                @media print {
+                                    body { padding: 0; }
+                                    .no-print { display: none; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="print-container">
+                                <h1>Event QR Code</h1>
+                                <div class="event-details">
+                                    <h2>${data.event.title}</h2>
+                                    <p><strong>Date:</strong> ${data.event.date}</p>
+                                    ${timeInfo}
+                                    <p><strong>Event Code:</strong> ${data.event.code}</p>
+                                </div>
+                                <div class="qr-code">
+                                    <img src="${data.qr_code}" style="width: 300px; height: 300px;">
+                                </div>
+                                <div class="footer">
+                                    <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                                    <p>Scan this QR code to mark attendance for the event</p>
+                                </div>
+                            </div>
+                            <button class="no-print" onclick="window.print();" style="position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                Print
+                            </button>
+                        </body>
+                        </html>
+                    `;
+                    
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(printContent);
+                    printWindow.document.close();
+                    printWindow.focus();
+                };
+                
+                // Scroll to result smoothly
+                setTimeout(() => {
+                    qrResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+                
+                alert('QR code generated successfully!');
+            } else {
+                alert(data.message || 'Failed to generate QR code');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadingSpinner.style.display = 'none';
+            generateQRBtn.innerHTML = originalText;
+            generateQRBtn.disabled = false;
+            alert('Failed to generate QR code. Please try again.');
+        });
+    });
+    
+    // New QR button
+    document.getElementById('newQRBtn').onclick = function() {
+        qrResult.style.display = 'none';
+        eventSelect.value = '';
+        eventSelect.focus();
+        qrImageContainer.innerHTML = '';
+        eventInfo.innerHTML = '';
+    };
+});
+</script>
+{% endblock %}

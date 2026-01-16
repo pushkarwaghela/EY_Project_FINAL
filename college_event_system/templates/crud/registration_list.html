@@ -1,0 +1,504 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Event Registrations - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-list-check text-primary me-2"></i>Event Registrations
+            </h2>
+            <p class="text-muted mb-0">Manage and view all event registrations</p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- Export Button -->
+            <button class="btn btn-outline-secondary" onclick="exportToExcel()">
+                <i class="fas fa-file-export me-2"></i>Export
+            </button>
+            <!-- Filter Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-filter me-2"></i>Filter
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="?status=all">All Registrations</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="?status=attended">Attended Only</a></li>
+                    <li><a class="dropdown-item" href="?status=pending">Pending Attendance</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="?sort=recent">Most Recent</a></li>
+                    <li><a class="dropdown-item" href="?sort=oldest">Oldest First</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary bg-primary bg-opacity-10">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-primary">Total Registrations</h6>
+                            <h3 class="mb-0">{{ total_registrations }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clipboard-list fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success bg-success bg-opacity-10">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-success">Attended</h6>
+                            <h3 class="mb-0">{{ attended_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning bg-warning bg-opacity-10">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-warning">Pending</h6>
+                            <h3 class="mb-0">{{ pending_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info bg-info bg-opacity-10">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-info">Attendance Rate</h6>
+                            <h3 class="mb-0">
+                                {% if total_registrations > 0 %}
+                                    {{ attended_count|floatformat:0 }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Search Student</label>
+                    <input type="text" id="searchStudent" class="form-control" placeholder="Name, username, or email...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Filter by Event</label>
+                    <select id="filterEvent" class="form-select">
+                        <option value="">All Events</option>
+                        {% for event in events %}
+                        <option value="{{ event.event_id }}">{{ event.title }} - {{ event.date }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Attendance Status</label>
+                    <select id="filterStatus" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="attended">Attended</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registrations Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">All Registrations</h5>
+        </div>
+        <div class="card-body">
+            {% if registrations %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="registrationsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Registration ID</th>
+                            <th>Event Details</th>
+                            <th>Student Details</th>
+                            <th>Registration Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reg in registrations %}
+                        <tr class="registration-row" 
+                            data-student="{{ reg.student.get_full_name|lower }} {{ reg.student.username|lower }} {{ reg.student.email|lower }}"
+                            data-event="{{ reg.event.event_id }}"
+                            data-status="{% if reg.attended %}attended{% else %}pending{% endif %}">
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <code class="text-primary">{{ reg.registration_id|truncatechars:10 }}</code>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-start">
+                                    <div class="me-3">
+                                        <i class="fas fa-{{ reg.event.icon }} text-primary fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ reg.event.title }}</strong><br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>{{ reg.event.date }}<br>
+                                            <i class="fas fa-clock me-1"></i>{{ reg.event.start_time }} - {{ reg.event.end_time }}<br>
+                                            <i class="fas fa-map-marker-alt me-1"></i>{{ reg.event.venue }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-start">
+                                    {% if reg.student.profile_picture %}
+                                    <img src="{{ reg.student.profile_picture.url }}" alt="Profile" 
+                                         class="rounded-circle me-3" width="40" height="40">
+                                    {% else %}
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ reg.student.get_full_name }}</strong><br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-id-card me-1"></i>{{ reg.student.username }}<br>
+                                            <i class="fas fa-envelope me-1"></i>{{ reg.student.email }}<br>
+                                            <i class="fas fa-graduation-cap me-1"></i>{{ reg.student.department|default:"N/A" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {{ reg.registration_date|date:"M d, Y" }}<br>
+                                <small class="text-muted">{{ reg.registration_date|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if reg.attended %}
+                                <span class="badge bg-success py-2 px-3">
+                                    <i class="fas fa-check-circle me-1"></i>Attended
+                                </span>
+                                {% if reg.attendance_time %}
+                                <br><small class="text-muted">at {{ reg.attendance_time|time:"H:i" }}</small>
+                                {% endif %}
+                                {% else %}
+                                <span class="badge bg-warning py-2 px-3">
+                                    <i class="fas fa-clock me-1"></i>Registered
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'event_detail' reg.event.event_id %}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="View Event">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'user_detail' reg.student.id %}" 
+                                       class="btn btn-sm btn-outline-info" 
+                                       title="View Student">
+                                        <i class="fas fa-user"></i>
+                                    </a>
+                                    {% if not reg.attended %}
+                                    <button class="btn btn-sm btn-outline-success mark-attendance-btn"
+                                            data-registration-id="{{ reg.registration_id }}"
+                                            title="Mark as Attended">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-outline-danger delete-registration-btn"
+                                            data-registration-id="{{ reg.registration_id }}"
+                                            data-student-name="{{ reg.student.get_full_name }}"
+                                            data-event-title="{{ reg.event.title }}"
+                                            title="Delete Registration">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if registrations.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if registrations.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ registrations.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in registrations.paginator.page_range %}
+                        {% if registrations.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > registrations.number|add:'-3' and num < registrations.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if registrations.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ registrations.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ registrations.paginator.num_pages }}">Last &raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-clipboard-list fa-4x text-muted"></i>
+                </div>
+                <h4 class="text-muted mb-3">No Registrations Found</h4>
+                <p class="text-muted mb-4">No students have registered for events yet.</p>
+                <a href="{% url 'events' %}" class="btn btn-primary">
+                    <i class="fas fa-calendar-plus me-2"></i>Browse Events
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the registration for <strong id="deleteStudentName"></strong> from event <strong id="deleteEventTitle"></strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Registration</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Search and Filter functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Search by student
+    const searchInput = document.getElementById('searchStudent');
+    const filterEvent = document.getElementById('filterEvent');
+    const filterStatus = document.getElementById('filterStatus');
+    const rows = document.querySelectorAll('.registration-row');
+    
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedEvent = filterEvent.value;
+        const selectedStatus = filterStatus.value;
+        
+        rows.forEach(row => {
+            const studentData = row.getAttribute('data-student');
+            const eventId = row.getAttribute('data-event');
+            const status = row.getAttribute('data-status');
+            
+            let showRow = true;
+            
+            // Search filter
+            if (searchTerm && !studentData.includes(searchTerm)) {
+                showRow = false;
+            }
+            
+            // Event filter
+            if (selectedEvent && eventId !== selectedEvent) {
+                showRow = false;
+            }
+            
+            // Status filter
+            if (selectedStatus && status !== selectedStatus) {
+                showRow = false;
+            }
+            
+            row.style.display = showRow ? '' : 'none';
+        });
+    }
+    
+    searchInput.addEventListener('input', filterTable);
+    filterEvent.addEventListener('change', filterTable);
+    filterStatus.addEventListener('change', filterTable);
+    
+    // Delete registration modal
+    const deleteButtons = document.querySelectorAll('.delete-registration-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const deleteForm = document.getElementById('deleteForm');
+    const deleteStudentName = document.getElementById('deleteStudentName');
+    const deleteEventTitle = document.getElementById('deleteEventTitle');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const registrationId = this.getAttribute('data-registration-id');
+            const studentName = this.getAttribute('data-student-name');
+            const eventTitle = this.getAttribute('data-event-title');
+            
+            deleteStudentName.textContent = studentName;
+            deleteEventTitle.textContent = eventTitle;
+            deleteForm.action = `/registrations/${registrationId}/delete/`;
+            
+            deleteModal.show();
+        });
+    });
+    
+    // Mark attendance
+    const markAttendanceButtons = document.querySelectorAll('.mark-attendance-btn');
+    markAttendanceButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const registrationId = this.getAttribute('data-registration-id');
+            
+            if (confirm('Mark this student as attended?')) {
+                fetch(`/attendance/mark/manual/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        registration_id: registrationId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Error marking attendance');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to mark attendance');
+                });
+            }
+        });
+    });
+});
+
+// Export to Excel
+function exportToExcel() {
+    const table = document.getElementById('registrationsTable');
+    const html = table.outerHTML;
+    
+    // Create a blob and download link
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'registrations-' + new Date().toISOString().split('T')[0] + '.xls';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Sort table by column
+function sortTable(columnIndex) {
+    const table = document.getElementById('registrationsTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    rows.sort((a, b) => {
+        const aText = a.cells[columnIndex].textContent.trim();
+        const bText = b.cells[columnIndex].textContent.trim();
+        
+        return aText.localeCompare(bText);
+    });
+    
+    // Clear and reappend sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+
+<style>
+.registration-row:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+}
+
+.badge {
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+.table th {
+    font-weight: 600;
+    color: #495057;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-group .btn {
+    border-radius: 4px !important;
+    margin-right: 2px;
+}
+
+.card {
+    border: 1px solid rgba(0,0,0,.125);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    background-color: rgba(0,0,0,.03);
+}
+</style>
+{% endblock %}

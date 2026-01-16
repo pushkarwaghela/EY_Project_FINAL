@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ login_title }} - Smart College Event System{% endblock %}
+
+{% block extra_head %}
+<style>
+    .login-portal {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f5f7fb 0%, #e4edff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+    
+    .login-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(67, 97, 238, 0.15);
+        overflow: hidden;
+        max-width: 450px;
+        width: 100%;
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+    }
+    
+    .login-header {
+        padding: 2.5rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .admin-login .login-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5d5d 100%);
+    }
+    
+    .student-login .login-header {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    }
+    
+    .login-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+        opacity: 0.3;
+        animation: float 20s linear infinite;
+    }
+    
+    @keyframes float {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        100% { transform: translate(-30px, -30px) rotate(360deg); }
+    }
+    
+    .role-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2.5rem;
+        color: white;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .login-title {
+        color: white;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+    }
+    
+    .login-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+    }
+    
+    .login-body {
+        padding: 2.5rem;
+    }
+    
+    .form-control-lg {
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+    
+    .form-control-lg:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    }
+    
+    .input-group-text {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-right: none;
+    }
+    
+    .input-group .form-control-lg {
+        border-left: none;
+    }
+    
+    .btn-login {
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        border: none;
+        transition: all 0.3s ease;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .admin-login .btn-login {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5d5d 100%);
+    }
+    
+    .student-login .btn-login {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    }
+    
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+    }
+    
+    .login-footer {
+        padding: 1.5rem 2rem;
+        text-align: center;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .role-switch {
+        display: flex;
+        background: #f1f5f9;
+        border-radius: 12px;
+        padding: 0.25rem;
+        margin-bottom: 2rem;
+    }
+    
+    .role-switch-btn {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: none;
+        background: transparent;
+        border-radius: 10px;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .role-switch-btn.active {
+        background: white;
+        color: var(--primary);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .role-switch-btn i {
+        font-size: 1.1rem;
+    }
+    
+    .forgot-link {
+        color: #64748b;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+    }
+    
+    .forgot-link:hover {
+        color: var(--primary);
+    }
+    
+    .guest-message {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 2rem;
+    }
+    
+    .guest-message h6 {
+        color: #0369a1;
+        margin-bottom: 0.5rem;
+    }
+    
+    .guest-message p {
+        color: #0c4a6e;
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .particle {
+        position: absolute;
+        border-radius: 50%;
+        background: var(--primary);
+        opacity: 0.1;
+        animation: float-particle 20s infinite linear;
+    }
+    
+    @keyframes float-particle {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        100% { transform: translate(-100px, -100px) rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-portal">
+    <div class="login-card {% if role == 'admin' %}admin-login{% else %}student-login{% endif %}">
+        <!-- Decorative particles -->
+        <div class="particles">
+            <div class="particle" style="top: 10%; left: 20%; width: 60px; height: 60px; animation-delay: 0s;"></div>
+            <div class="particle" style="top: 60%; right: 15%; width: 40px; height: 40px; animation-delay: 5s;"></div>
+            <div class="particle" style="bottom: 20%; left: 10%; width: 80px; height: 80px; animation-delay: 10s;"></div>
+        </div>
+        
+        <div class="login-header">
+            <div class="role-icon">
+                {% if role == 'admin' %}
+                <i class="fas fa-user-shield"></i>
+                {% else %}
+                <i class="fas fa-user-graduate"></i>
+                {% endif %}
+            </div>
+            <h1 class="login-title">{{ login_title }}</h1>
+            <p class="login-subtitle">
+                {% if role == 'admin' %}
+                Access administrative controls and analytics
+                {% else %}
+                Manage your events and attendance
+                {% endif %}
+            </p>
+        </div>
+        
+        <!-- Role Switch -->
+        <div class="login-body">
+            <div class="role-switch">
+                <button class="role-switch-btn {% if role == 'student' %}active{% endif %}" 
+                        onclick="window.location.href='{% url 'login' %}?role=student'">
+                    <i class="fas fa-user-graduate"></i> Student
+                </button>
+                <button class="role-switch-btn {% if role == 'admin' %}active{% endif %}" 
+                        onclick="window.location.href='{% url 'login' %}?role=admin'">
+                    <i class="fas fa-user-shield"></i> Admin
+                </button>
+            </div>
+            
+            <!-- Login Form -->
+            <form method="POST" action="{% url 'login' %}?role={{ role }}">
+                {% csrf_token %}
+                <input type="hidden" name="role" value="{{ role }}">
+                
+                {% if messages %}
+                <div class="mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                            <div>{{ message }}</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-2">Username or Email</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input type="text" 
+                               name="username" 
+                               class="form-control form-control-lg" 
+                               placeholder="Enter username or email"
+                               required
+                               autofocus>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label fw-bold mb-0">Password</label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input type="password" 
+                               name="password" 
+                               class="form-control form-control-lg" 
+                               placeholder="Enter your password"
+                               required>
+                        <button class="input-group-text bg-white" type="button" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                    <label class="form-check-label" for="remember">
+                        Remember me
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-login mb-3">
+                    <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                </button>
+                
+                <div class="text-center">
+                    <p class="text-muted mb-0">
+                        Don't have an account?
+                        <a href="{% url 'register' %}" class="text-decoration-none fw-bold">
+                            Register here
+                        </a>
+                    </p>
+                </div>
+            </form>
+            
+            <!-- Demo Accounts -->
+            <div class="guest-message">
+                <h6><i class="fas fa-info-circle me-2"></i>Demo Accounts</h6>
+                <p>
+                    <strong>Student:</strong> student / student123<br>
+                    <strong>Admin:</strong> admin / admin123
+                </p>
+            </div>
+        </div>
+        
+        <div class="login-footer">
+            <p class="text-muted small mb-0">
+                © 2024 Smart College Event System. All rights reserved.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle password visibility
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.querySelector('input[name="password"]');
+        
+        togglePassword?.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('fa-eye');
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+        
+        // Add particles animation
+        createParticles();
+        
+        // Form validation
+        const form = document.querySelector('form');
+        form?.addEventListener('submit', function(e) {
+            const username = this.querySelector('input[name="username"]');
+            const password = this.querySelector('input[name="password"]');
+            
+            if (!username.value.trim() || !password.value.trim()) {
+                e.preventDefault();
+                showToast('Please fill in all fields', 'error');
+            }
+        });
+    });
+    
+    function createParticles() {
+        const particlesContainer = document.querySelector('.particles');
+        if (!particlesContainer) return;
+        
+        // Clear existing particles
+        particlesContainer.innerHTML = '';
+        
+        // Create 10 particles
+        for (let i = 0; i < 10; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Random properties
+            const size = Math.random() * 60 + 20;
+            const left = Math.random() * 100;
+            const top = Math.random() * 100;
+            const delay = Math.random() * 20;
+            const duration = Math.random() * 10 + 15;
+            
+            particle.style.cssText = `
+                width: ${size}px;
+                height: ${size}px;
+                left: ${left}%;
+                top: ${top}%;
+                animation-delay: ${delay}s;
+                animation-duration: ${duration}s;
+                opacity: ${Math.random() * 0.1 + 0.05};
+                background: ${document.querySelector('.login-card').classList.contains('admin-login') ? '#ff6b6b' : '#4361ee'};
+            `;
+            
+            particlesContainer.appendChild(particle);
+        }
+    }
+    
+    function showToast(message, type = 'info') {
+        // Implementation from script.js
+        if (window.showToast) {
+            window.showToast(message, type);
+        } else {
+            alert(message);
+        }
+    }
+</script>
+{% endblock %}

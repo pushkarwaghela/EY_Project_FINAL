@@ -1,0 +1,488 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - Smart College Event System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="mb-4">
+                    <span class="badge bg-primary mb-3 px-3 py-2 fs-6 fw-normal">
+                        <i class="fas fa-star me-2"></i>Version 2.0
+                    </span>
+                </div>
+                
+                <h1 class="display-4 fw-bold mb-4 animate-fade-in">
+                    Smart College Event & Attendance Management
+                </h1>
+                
+                <p class="lead text-muted mb-5 animate-fade-in delay-1">
+                    A modern platform revolutionizing how colleges manage events and track attendance with cutting-edge technology, real-time analytics, and seamless automation.
+                </p>
+                
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3 animate-fade-in delay-2">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg px-4 py-3">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
+                    <a href="{% url 'events' %}" class="btn btn-outline-primary btn-lg px-4 py-3">
+                        <i class="fas fa-calendar me-2"></i>Browse Events
+                    </a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 py-3">
+                        <i class="fas fa-rocket me-2"></i>Get Started
+                    </a>
+                    <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg px-4 py-3">
+                        <i class="fas fa-user-plus me-2"></i>Register
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-5 pt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt me-1"></i>Secure • Fast • Reliable
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-8 mx-auto text-center">
+                <span class="badge bg-secondary mb-3">FEATURES</span>
+                <h2 class="fw-bold mb-3">Why Choose Our Platform?</h2>
+                <p class="text-muted">Designed for efficiency, built for performance</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <!-- Feature 1 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="feature-icon-wrapper mb-4">
+                            <div class="feature-icon bg-primary">
+                                <i class="fas fa-calendar-alt fa-lg"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-3">Event Management</h4>
+                        <p class="text-muted mb-4">
+                            Create, schedule, and manage college events digitally with automated notifications and seamless registration.
+                        </p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Automated scheduling</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Online registration</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Real-time updates</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="feature-icon-wrapper mb-4">
+                            <div class="feature-icon bg-success">
+                                <i class="fas fa-qrcode fa-lg"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-3">Smart Attendance</h4>
+                        <p class="text-muted mb-4">
+                            QR-based attendance system eliminating manual entry with accurate, real-time tracking and verification.
+                        </p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Instant QR generation</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Geolocation verification</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Real-time tracking</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="feature-icon-wrapper mb-4">
+                            <div class="feature-icon bg-info">
+                                <i class="fas fa-chart-bar fa-lg"></i>
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-3">Analytics & Reports</h4>
+                        <p class="text-muted mb-4">
+                            Generate comprehensive reports and analytics for data-driven decisions about participation and engagement.
+                        </p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Visual dashboards</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Export to PDF/Excel</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Attendance analytics</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center p-4">
+                    <div class="display-4 fw-bold text-primary mb-2">500+</div>
+                    <div class="text-muted">Events Managed</div>
+                    <div class="small text-muted mt-2">Successfully organized</div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center p-4">
+                    <div class="display-4 fw-bold text-success mb-2">95%</div>
+                    <div class="text-muted">Accuracy Rate</div>
+                    <div class="small text-muted mt-2">Attendance precision</div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center p-4">
+                    <div class="display-4 fw-bold text-warning mb-2">10K+</div>
+                    <div class="text-muted">Students Served</div>
+                    <div class="small text-muted mt-2">Across campuses</div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="text-center p-4">
+                    <div class="display-4 fw-bold text-info mb-2">24/7</div>
+                    <div class="text-muted">System Uptime</div>
+                    <div class="small text-muted mt-2">Reliable service</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="fw-bold mb-4">Ready to Transform Your College Management?</h2>
+                <p class="lead mb-5 opacity-75">
+                    Join hundreds of educational institutions using our platform to streamline their operations.
+                </p>
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'events' %}" class="btn btn-light btn-lg px-4">
+                        <i class="fas fa-calendar-plus me-2"></i>Create Your First Event
+                    </a>
+                    {% else %}
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4">
+                        <i class="fas fa-user-plus me-2"></i>Get Started Free
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    {% endif %}
+                </div>
+                <p class="small mt-4 opacity-50">
+                    No credit card required • 14-day free trial • Full support included
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials (Optional) -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-8 mx-auto text-center">
+                <span class="badge bg-secondary mb-3">TESTIMONIALS</span>
+                <h2 class="fw-bold mb-3">Trusted by Educators</h2>
+                <p class="text-muted">What our users say about the platform</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Dr. Sarah Johnson</h6>
+                                <small class="text-muted">Dean, Computer Science</small>
+                            </div>
+                        </div>
+                        <p class="mb-0">
+                            <i class="fas fa-quote-left text-primary me-2"></i>
+                            This system has reduced our administrative workload by 60% while improving attendance accuracy.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-sm bg-success rounded-circle d-flex align-items-center justify-content-center me-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Prof. Michael Chen</h6>
+                                <small class="text-muted">Event Coordinator</small>
+                            </div>
+                        </div>
+                        <p class="mb-0">
+                            <i class="fas fa-quote-left text-success me-2"></i>
+                            The QR attendance system is revolutionary. Students love the convenience, and we love the accuracy.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-sm bg-info rounded-circle d-flex align-items-center justify-content-center me-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Alex Rodriguez</h6>
+                                <small class="text-muted">Student President</small>
+                            </div>
+                        </div>
+                        <p class="mb-0">
+                            <i class="fas fa-quote-left text-info me-2"></i>
+                            Managing college events has never been easier. The dashboard gives us real-time insights.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer CTA -->
+<footer class="py-4 border-top">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-0 text-muted">
+                    <i class="fas fa-graduation-cap text-primary me-2"></i>
+                    Smart College Event System v2.0
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="#" class="text-muted me-3">
+                    <i class="fas fa-shield-alt me-1"></i> Privacy
+                </a>
+                <a href="#" class="text-muted me-3">
+                    <i class="fas fa-file-alt me-1"></i> Terms
+                </a>
+                <a href="#" class="text-muted">
+                    <i class="fas fa-envelope me-1"></i> Contact
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%234361ee" fill-opacity="0.1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,202.7C672,203,768,181,864,165.3C960,149,1056,139,1152,149.3C1248,160,1344,192,1392,208L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        background-position: bottom;
+        opacity: 0.1;
+    }
+    
+    /* Feature Icons */
+    .feature-icon-wrapper {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-icon:hover {
+        transform: translateY(-5px);
+    }
+    
+    /* Cards */
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 15px;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Animations */
+    .animate-fade-in {
+        animation: fadeIn 1s ease-out;
+    }
+    
+    .animate-fade-in.delay-1 {
+        animation-delay: 0.3s;
+        animation-fill-mode: both;
+    }
+    
+    .animate-fade-in.delay-2 {
+        animation-delay: 0.6s;
+        animation-fill-mode: both;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Avatar */
+    .avatar-sm {
+        width: 40px;
+        height: 40px;
+    }
+    
+    /* Display Numbers */
+    .display-4 {
+        font-size: 3.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .display-4 {
+            font-size: 2.5rem;
+        }
+    }
+    
+    /* Buttons */
+    .btn-lg {
+        border-radius: 10px;
+    }
+    
+    /* Section Spacing */
+    section {
+        padding-top: 5rem;
+        padding-bottom: 5rem;
+    }
+    
+    @media (max-width: 768px) {
+        section {
+            padding-top: 3rem;
+            padding-bottom: 3rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Add hover effects to cards
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Animate stats counters
+        function animateValue(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                element.textContent = value;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+        
+        // Start animation when stats section is in view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumbers = document.querySelectorAll('.display-4');
+                    statNumbers.forEach(number => {
+                        const target = parseInt(number.textContent);
+                        if (!isNaN(target)) {
+                            animateValue(number, 0, target, 2000);
+                        }
+                    });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        const statsSection = document.querySelector('section.py-5:not(.hero-section):not(.bg-light):not(.bg-primary)');
+        if (statsSection) observer.observe(statsSection);
+    });
+</script>
+{% endblock %}

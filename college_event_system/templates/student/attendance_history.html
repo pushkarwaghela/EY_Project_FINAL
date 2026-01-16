@@ -1,0 +1,142 @@
+<!-- templates/student/attendance_history.html -->
+<div class="attendance-history">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">My Attendance History</h4>
+        <span class="badge bg-primary">Total: {{ total_count }}</span>
+    </div>
+
+    {% if attendance_records %}
+    <div class="timeline">
+        {% for month, records in monthly_data.items %}
+        <div class="timeline-month mb-4">
+            <div class="timeline-month-header">
+                <h5 class="text-primary mb-3">
+                    <i class="fas fa-calendar-alt me-2"></i>{{ month }}
+                </h5>
+            </div>
+            
+            <div class="timeline-items">
+                {% for record in records %}
+                <div class="timeline-item card mb-3">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-2">
+                                <div class="text-center">
+                                    <div class="date-badge bg-primary text-white rounded p-2">
+                                        <div class="day">{{ record.marked_at|date:"d" }}</div>
+                                        <div class="month">{{ record.marked_at|date:"M" }}</div>
+                                    </div>
+                                    <small class="text-muted mt-1 d-block">{{ record.marked_at|time:"g:i A" }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-1">{{ record.event.title }}</h6>
+                                <p class="text-muted small mb-2">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ record.event.venue }}
+                                </p>
+                                <div>
+                                    <span class="badge bg-{{ record.method }} me-2">
+                                        <i class="fas fa-{{ record.method_icon }} me-1"></i>
+                                        {{ record.get_method_display }}
+                                    </span>
+                                    <span class="badge bg-{{ record.status_color }}">
+                                        <i class="fas fa-{{ record.status_icon }} me-1"></i>
+                                        {{ record.status|title }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                {% if record.verified %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i> Verified
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i> Pending
+                                </span>
+                                {% endif %}
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-info"
+                                            onclick="viewAttendanceDetails('{{ record.attendance_id }}')">
+                                        <i class="fas fa-eye"></i> Details
+                                    </button>
+                                    {% if record.verified %}
+                                    <a href="{% url 'generate_certificate' record.attendance_id %}"
+                                       class="btn btn-sm btn-outline-success ms-1"
+                                       target="_blank">
+                                        <i class="fas fa-certificate"></i> Certificate
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+        <h5>No attendance history yet</h5>
+        <p class="text-muted">Your attendance records will appear here once you start attending events.</p>
+        <a href="{% url 'events' %}" class="btn btn-primary mt-2">
+            <i class="fas fa-calendar me-1"></i> Browse Events
+        </a>
+    </div>
+    {% endif %}
+
+    <style>
+        .date-badge {
+            display: inline-block;
+            min-width: 60px;
+        }
+        
+        .date-badge .day {
+            font-size: 1.5rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+        
+        .date-badge .month {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .timeline-month {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline-month:before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #4361ee, #2ec4b6);
+        }
+        
+        .timeline-month-header {
+            position: relative;
+            margin-left: -15px;
+        }
+        
+        .timeline-month-header h5:before {
+            content: '';
+            position: absolute;
+            left: -32px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4361ee;
+            border: 2px solid white;
+            box-shadow: 0 0 0 3px #4361ee;
+        }
+    </style>
+</div>
